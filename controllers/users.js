@@ -14,12 +14,20 @@ module.exports = {
             loginCount: loginCount
         });
         await newItem.save();
-        return newItem; s
+        return newItem;
     },
     GetAllUser: async function () {
         let users = await userModel
             .find({ isDeleted: false })
         return users;
+    },
+    GetAnUserById: async function (id) {
+        let user = await userModel
+            .findOne({
+                isDeleted: false,
+                _id: id
+            })
+        return user;
     },
     GetAnUserByUsername: async function (username) {
         let user = await userModel

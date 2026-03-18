@@ -29,6 +29,27 @@ module.exports = {
         }).isURL().withMessage("URL sai dinh dang"),
         body("role").notEmpty().withMessage("role khong duoc de trong").bail().isMongoId().withMessage("role khong hop le")
     ],
+    ChangePasswordValidator: [
+        body('oldPassword')
+            .notEmpty().withMessage("oldPassword khong duoc de trong"),
+        body('newPassword')
+            .notEmpty().withMessage("newPassword khong duoc de trong")
+            .bail()
+            .isStrongPassword({
+                minLength: 8,
+                minLowercase: 1,
+                minNumbers: 1,
+                minSymbols: 1,
+                minUppercase: 1
+            }).withMessage("newPassword it nhat 8 ky tu, gom it nhat: 1 chu hoa, 1 chu thuong, 1 so, 1 ky tu dac biet")
+            .bail()
+            .custom((value, { req }) => {
+                if (value === req.body.oldPassword) {
+                    throw new Error("newPassword khong duoc trung voi oldPassword");
+                }
+                return true;
+            })
+    ],
     ModifyAnUser: [
         body('username').isEmpty().withMessage("khong duoc thay doi username"),
         body('email').isEmpty().withMessage("email khong thay doi"),

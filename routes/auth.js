@@ -2,6 +2,11 @@ var express = require("express");
 var router = express.Router();
 let userController = require('../controllers/users')
 let bcrypt = require('bcrypt')
+let jwt = require('jsonwebtoken')
+let fs = require('fs');
+const { CheckLogin } = require("../utils/authHandler");
+const { ChangePasswordValidator, validatedResult } = require("../utils/validateHandler");
+const privateKey = fs.readFileSync('./private.key', 'utf8');
 
 router.post('/register', async function (req, res, next) {
     try {
@@ -34,9 +39,13 @@ router.post('/login', async function (req, res, next) {
         if (bcrypt.compareSync(password, user.password)) {
             loginCount = 0;
             await user.save()
-            res.send({
+            let token = jwt.sign({
                 id: user._id
+            }, privateKey, {
+                expiresIn: '1h',
+                algorithm: 'RS256'
             })
+            res.send(token)
         } else {
             user.loginCount++;
             if (user.loginCount == 3) {
@@ -55,6 +64,37 @@ router.post('/login', async function (req, res, next) {
     }
 
 })
+router.get('/me', CheckLogin, function (req, res, next) {
+    res.send(req.user)
+})
+
+router.post('/change-password', CheckLogin, ChangePasswordValidator, validatedResult, async function (req, res, next) {
+    try {
+        let { oldPassword, newPassword } = req.body;
+        let user = req.user;
+
+        // Kiểm tra oldPassword có đúng không
+        let isMatch = bcrypt.compareSync(oldPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).send({
+                message: "oldPassword khong chinh xac"
+            });
+        }
+
+        // Cập nhật password mới (bcrypt hash tự động qua pre-save hook)
+        user.password = newPassword;
+        await user.save();
+
+        res.send({
+            message: "doi mat khau thanh cong"
+        });
+    } catch (error) {
+        res.status(500).send({
+            message: error.message
+        });
+    }
+})
 
 
-module.exports = router;
+
+module.exports = router;

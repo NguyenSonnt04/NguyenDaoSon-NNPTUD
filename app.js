@@ -27,7 +27,7 @@ app.use('/api/v1/categories', require('./routes/categories'));
 app.use('/api/v1/auth', require('./routes/auth'));
 
 //connect
-mongoose.connect('mongodb://localhost:27017/NNPTUD-S4');
+mongoose.connect('mongodb://127.0.0.1:27017/db');
 mongoose.connection.on('connected', function () {
   console.log("connected");
 })
